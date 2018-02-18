@@ -1,5 +1,6 @@
 import sys, re
 import time
+import socket
 import select
 
 def usage():
@@ -7,23 +8,23 @@ def usage():
 sys.exit(1)
 
 try:
-  args = sys.argv[1: ]
-  while args:
-      sw = args[0];
-      del args[0]
-  if sw == "--serverAddr":
-      addr, port = re.split(":", args[0]); del args[0]
-      serverAddr = (addr, int(port))
-  else :
-      print "unexpected parameter %s" % args[0]
-      usage();
+    args = sys.argv[1: ]
+    while args:
+        sw = args[0];
+        del args[0]
+        if sw == "--serverAddr":
+            addr, port = re.split(":", args[0]); del args[0]
+            serverAddr = (addr, int(port))
+        else :
+            print "unexpected parameter %s" % args[0]
+            usage();
 
 except:
     usage()
 
 
 # create clientSocket object
-clientSocket = socket(AF_INET, SOCK_DGRAM)
+clientSocket = socket(socket.AF_INET, socket.SOCK_DGRAM)
 clientSocket.setblocking(0)# set blocking to false so timeouts work
 
 # set up client socket to recieve# get input from the user
@@ -47,7 +48,7 @@ print "message sent. Ready to recieve"
 readReady, writeReady, errorReady = select(readSock, writeSock, errorSock, timeout)
 # if nothing is present in the sockets print a timeout error
 if not readReady and not writeReady and not errorReady:
-	print "timeout: No communication from the server"
+    print "timeout: No communication from the server"
 
 #if there is something present in the read sockets read it and print it out
 for socket in readReady: #dont forget to calculate RTT
