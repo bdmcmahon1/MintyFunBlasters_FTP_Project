@@ -1,11 +1,13 @@
 import sys, re
 import time
-import socket
+from socket import *
 import select
+
+serverAddr = ('localhost', 50000)
 
 def usage():
     print "usage: %s [--serverAddr host:port]" % sys.argv[0]
-sys.exit(1)
+    sys.exit(1)
 
 try:
     args = sys.argv[1: ]
@@ -24,7 +26,7 @@ except:
 
 
 # create clientSocket object
-clientSocket = socket(socket.AF_INET, socket.SOCK_DGRAM)
+clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.setblocking(0)# set blocking to false so timeouts work
 
 # set up client socket to recieve# get input from the user
@@ -45,7 +47,7 @@ clientSocket.sendto(message, serverAddr)
 print "message sent. Ready to recieve" 
 #recieve message from server
 
-readReady, writeReady, errorReady = select(readSock, writeSock, errorSock, timeout)
+readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
 # if nothing is present in the sockets print a timeout error
 if not readReady and not writeReady and not errorReady:
     print "timeout: No communication from the server"
