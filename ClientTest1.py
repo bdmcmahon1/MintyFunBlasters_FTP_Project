@@ -2,12 +2,41 @@ import sys, re
 import time
 from socket import *
 import select
+import Header
+import os
 
 serverAddr = ('localhost', 50000)
+
+#define constants
+msgSize = 80
+readData = {}
 
 def usage():
     print "usage: %s [--serverAddr host:port]" % sys.argv[0]
     sys.exit(1)
+
+def input():
+    header = Header()
+    header.datatype = raw_input("What would you like to do:\n 
+	GET - pull file from server \n 
+	PUT - store a file on the server \n")
+    header.options = raw_input("Which file would you like to GET/PUT?")
+    header.filesize = os.path.getsize(header.options())
+    
+def putFile(header.options(),msgSize,readData):
+    fp = open(header.options(), "rb")
+    
+    index=0
+    while True:
+        #populate a dictionary with messages of broken up file
+        #keys are indexes and values are the messages for each index
+        readData["index"] = fp.read(msgsize)
+        index++
+        if readData[-1] < msgSize:
+            break
+        
+
+    
 
 try:
     args = sys.argv[1: ]
@@ -23,6 +52,9 @@ try:
 
 except:
     usage()
+
+#create header module
+
 
 
 # create clientSocket object
