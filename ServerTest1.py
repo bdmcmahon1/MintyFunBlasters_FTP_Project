@@ -38,7 +38,7 @@ while True:
             if recvHDR["datatype"] == "GET":
                 # GET file from local file system
                 filename = recvHDR["options"]
-                filepath = "C:\\" + filename
+                filepath = filename
                 fileOBJ = open(filepath)
                 # Read entire file and calculate packets for file
                 filedata = fileOBJ.read()
