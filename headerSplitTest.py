@@ -49,7 +49,7 @@ def inputs():
 def getFile(reqHead):
     #define global variables
     global state
-
+    fileDict = {}
     #send request to server
     clientSocket.sendto(reqHead, serverAddr)
     print "request sent - waiting for response"
@@ -65,8 +65,46 @@ def getFile(reqHead):
             #split the header and message up
             print "message recieved and ready for interpretation"
             
+            #parse message and populate the dictionary
+            splitMessage,data,index,fileName = parseMessage(message)
+
+            #send an ack back to the server that it got the message
+            sendAck(index,fileName)
+
+            #check to see if EOF - if EOF break then write to file
+            if len(data) == 0:
+                print "File Transfer Complete"
+                saveFile(reqHead)
+                break
+            
     #wait for data
+#______________________________________________________________________________________________________
+
+def saveFile(reqHead):
     
+    print "File Transter complete... Writing File to disk..."
+    filename = open(reqHead.options, "w")
+    for keys in fdict:
+        filename.write(fdict[keys])
+    filename.close()
+
+    print "File saved to disk"
+
+
+#______________________________________________________________________________________________________
+
+def sendAck(index,fileName):
+    ack = Header()
+    #populate it with the sequencenum and file name and ACK message type
+    ack.datatype = ACK
+    ack.sequencenumber = index
+    ack.options = fileName
+    ackHead = ack.Write()
+
+    #send just the ACK header
+    clientSocket.sendto(ackHead, serverAddr)
+    
+
 #______________________________________________________________________________________________________
 #function for reading the sockets
 def sockRead():
@@ -110,13 +148,27 @@ def sockRead():
         for socket in readReady: #dont forget to calculate RTT
             message, serverAddr = socket.recvfrom(2048)
             print "packet recieved..."
-
+        
         return message
 
 
 
 
 #______________________________________________________________________________________________________
+
+def parseMessage(message):
+    splitMessage = message.split("@")
+    
+    data = splitMessage[-1]
+    index = splitMessage[1]
+    fileName = splitMessage[-2]
+    #index:message populate file dict
+    #if data exists its part of the file and should be stored
+    if len(data) != 0:
+        fileDict[index] = data
+    
+    return splitMessage, data, index, fileName
+
 
 #______________________________________________________________________________________________________
 
@@ -126,15 +178,15 @@ def sockRead():
 
 
 #asdk for inputs and check program status
-while(1):
-    state,reqHead = inputs()
 
-    print state, reqHead
+state,reqHead = inputs()
 
-    if state == 1:
-        getFile(reqHead);
-    else:
-        putFile(reqHead);
+print state, reqHead
+
+if state == 1:
+    getFile(reqHead);
+else:
+    putFile(reqHead);
 
 
 
@@ -156,6 +208,7 @@ allMessages = [splitMessage1,splitMessage2,splitMessage3]
 fileDict = {}
 for msg in allMessages :
     fileDict[msg[1]] = msg[-1]
+
 
 print fileDict
 
