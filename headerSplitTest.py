@@ -24,11 +24,26 @@ def inputs():
     #define global variables
     global state
     
-    #create header to populate request message with
-    
-    datatype = raw_input("GET or PUT a file?\n")
-    filename = raw_input("What file do you want/have?\n")
-    #create instance of header class
+#create header to populate request message with
+    while(1):
+        datatype = raw_input("GET or PUT a file?\n")
+        if (datatype == "GET") or (datatype == "PUT"):
+            break
+        else:
+            print "Please input a proper request (GET or PUT)"
+    while(1):
+        filename = raw_input("What file do you want/have?\n")
+        if datatype == "PUT":
+            if os.path.isfile(filename):
+                print "Fetching File..."
+                break
+            else:
+                print "File does not exist. Choose another file..."
+        if datatype == "GET":
+            break
+    print"Processing Request..."
+
+ #create instance of header class
     request = Header()
     #populate it with the input and write a header for the request
     request.datatype = datatype
@@ -119,7 +134,7 @@ def sockRead():
     # empty list - not interested in errors from select
     errorSock = []
     # time out variable since select has timeout built in
-    timeout = 5
+    timeout = 1
 
     totalTimeout = 0
     
@@ -134,25 +149,15 @@ def sockRead():
             if totalTimeout == 5:
                 state=0 #reset state variable
                 print "connection to server lost"
-                break
+                message = ""
+                return message
         else:
-            #there is something to read just get out of loop
-            break
-    
-    if totalTimeout == 5:
-        #conenction to server lost leave function
-        message = ""
-        return message
-    else:
-        #something present in the sockets - read it and return it
-        for socket in readReady: #dont forget to calculate RTT
-            message, serverAddr = socket.recvfrom(2048)
-            print "packet recieved..."
+            #something present in the sockets - read it and return it
+            for socket in readReady: #dont forget to calculate RTT
+                message, serverAddr = socket.recvfrom(2048)
+                print "packet recieved..."
         
-        return message
-
-
-
+            return message
 
 #______________________________________________________________________________________________________
 

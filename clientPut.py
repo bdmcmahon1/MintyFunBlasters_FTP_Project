@@ -8,13 +8,20 @@ import os
 
 #define constants
 serverAddr =('localhost',50000)
-
+msgSize = 60 #number of bytes in message (header is 40 bytes)
 #if total timeout reacheed connection is lost
 def connLost():
     #code to run when connection to server is lost
 
     print "Connection to Server lost"
     #after connection lost revert back to idle and ask for input
+
+
+#function for gather input
+def input():
+    reqType = raw_input("Get or Put?")
+    fileName = raw_input)"Which File?")
+    
 
 #define the header
 
@@ -37,13 +44,13 @@ fp = open(testhdr.options, "r")
 putDict = {}
 index=0
 while True:
-    putDict[index] = fp.read(80)
+    putDict[index] = fp.read(msgSize)
     
     if len(putDict[index])<80:
         print "EOF"
         break
     index+=1
-    print "dict of file with indicies", repr(putDict)
+print "dict of file with indicies", repr(putDict)
 
 #close file
 fp.close()
@@ -80,7 +87,7 @@ clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.setblocking(0)# set blocking to false so timeouts work
 
 # set up client socket to recieve# get input from the user
-message = raw_input("Input lowercase msg:")
+
 
 # set up lists to be used in select
 
