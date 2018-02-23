@@ -9,7 +9,12 @@ class Header(object):
         self.timetolive = "X"
         self.options = "X"
     def Write(self):
-        return self.datatype + "@" + self.filesize + "@" + self.numberofpackets + "@" + self.sequencenumber + "@" + self.packetsize + "@" + self.timetolive + "@" + self.options
+        strHeader = self.datatype + "@" + self.filesize + "@" + self.numberofpackets + "@" + self.sequencenumber + "@" + self.packetsize + "@" + self.timetolive + "@" + self.options + "@"
+        lenHeader = len(strHeader)
+        if lenHeader < 40:
+            for i in range(lenHeader, 40, 1):
+                strHeader = strHeader + "X"
+        return strHeader
     def Read(self, hdr):
         # Return dictionary
         hdrdictionary = {}
