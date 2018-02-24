@@ -93,9 +93,10 @@ while True:
                 fileOBJ.close()
                 
                 # STOP-AND-WAIT needed here: Send file parts
+                seqNumber = 1
                 for i in range(0, filebytes+1, msgSize):
                     #Create data header
-                    seqNumber = 1
+                    #seqNumber = 1
                     dataHDR = Header.Header()
                     dataHDR.datatype = "DATA"
                     dataHDR.filesize = str(filebytes)
