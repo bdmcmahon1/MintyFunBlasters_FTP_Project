@@ -60,7 +60,7 @@ def sockRead(msgResend, clientAddress):
                 message, serverAddr = socket.recvfrom(2048)
                 print "packet recieved..."
         
-            return message
+            return message, serverAddr
 
 #______________________________________________________________________________________________________
 
@@ -68,7 +68,8 @@ def sockRead(msgResend, clientAddress):
 
 while True:
     print >>sys.stderr, '\nwaiting to receive message'
-    data, address = sock.recvfrom(4096)
+    #data, address = sock.recvfrom(4096)
+    data, address = sockRead("", server_address)
     
     print >>sys.stderr, 'received %s bytes from %s' % (len(data), address)
     print >>sys.stderr, data
