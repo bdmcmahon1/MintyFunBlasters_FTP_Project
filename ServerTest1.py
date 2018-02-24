@@ -2,6 +2,7 @@ from socket import *
 import sys
 import math
 import Header
+import select
 
 # Definitions
 msgSize = 60
@@ -14,12 +15,56 @@ emptyhdr.Write()
 
 # Create a UDP socket with Datagram
 sock = socket(AF_INET, SOCK_DGRAM)
-#sock.setblocking(0)
 
 # Bind the socket to the port
 server_address = ('localhost', 10000)
 print >>sys.stderr, 'starting up on %s port %s' % server_address
+sock.setblocking(0)
 sock.bind(server_address)
+
+#______________________________________________________________________________________________________
+#function for reading the sockets
+def sockRead(msgResend, clientAddress):
+    #define global variables
+    global state
+
+    print "waiting to hear from server"
+    #for reading msgs from server
+    readSock = [sock]
+    # empty list since we arent writing to sockets(used in queue
+    writeSock = []
+    # empty list - not interested in errors from select
+    errorSock = []
+    # time out variable since select has timeout built in
+    timeout = 1
+
+    totalTimeout = 0
+    
+    #check sockets of server
+    while(1):
+
+        readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
+        # if nothing is present in the sockets print a timeout error
+        if not readReady and not writeReady and not errorReady:
+            print "timeout: No communication from the client"
+            sock.sendto(msgResend, clientAddress)
+            totalTimeout+=1
+            if totalTimeout == 5:
+                state=0 #reset state variable
+                print "connection to server lost"
+                message = ""
+                return message
+        else:
+            #something present in the sockets - read it and return it
+            for socket in readReady: #dont forget to calculate RTT
+                message, serverAddr = socket.recvfrom(2048)
+                print "packet recieved..."
+        
+            return message
+
+#______________________________________________________________________________________________________
+
+#sock.setblocking(0)
 
 while True:
     print >>sys.stderr, '\nwaiting to receive message'
@@ -73,6 +118,9 @@ while True:
                     
                     # Send message sequence
                     sent = sock.sendto(messageBytes, address)
+                    
+                    #STOP-AND-WAIT
+                    clientMessage = sockRead(messageBytes, address)
                     seqNumber = seqNumber + 1
                     
                 #Send EOF
