@@ -9,9 +9,10 @@ import collections
 
 #define global variables
 state = 0
+fileDict = {}
 
 #define constants
-serverAddr =('localhost',50000)
+serverAddr =('localhost',10000)
 
 #define and create client
 clientSocket = socket(AF_INET, SOCK_DGRAM)
@@ -24,7 +25,7 @@ def inputs():
     #define global variables
     global state
     
-#create header to populate request message with
+    #create header to populate request message with
     while(1):
         datatype = raw_input("GET or PUT a file?\n")
         if (datatype == "GET") or (datatype == "PUT"):
@@ -43,7 +44,7 @@ def inputs():
             break
     print"Processing Request..."
 
- #create instance of header class
+    #create instance of header class
     request = Header()
     #populate it with the input and write a header for the request
     request.datatype = datatype
@@ -111,7 +112,7 @@ def saveFile(reqHead):
 def sendAck(index,fileName):
     ack = Header()
     #populate it with the sequencenum and file name and ACK message type
-    ack.datatype = ACK
+    ack.datatype = "ACK"
     ack.sequencenumber = index
     ack.options = fileName
     ackHead = ack.Write()
@@ -145,9 +146,10 @@ def sockRead():
         # if nothing is present in the sockets print a timeout error
         if not readReady and not writeReady and not errorReady:
             print "timeout: No communication from the server"
+            print readReady
             totalTimeout+=1
             if totalTimeout == 5:
-                state=0 #reset state variable
+                state=0  f#reset state variable
                 print "connection to server lost"
                 message = ""
                 return message
@@ -162,11 +164,17 @@ def sockRead():
 #______________________________________________________________________________________________________
 
 def parseMessage(message):
-    splitMessage = message.split("@")
+    hdr = Header.Header()
+    headerData = message[0:39]
+    headerdict = hdr.Read(headerData)
+
     
-    data = splitMessage[-1]
-    index = splitMessage[1]
-    fileName = splitMessage[-2]
+
+    #splitMessage = message.split("@")
+    
+    data = message{39:]
+    index = hdr["sequencenumber"]
+    fileName = hdr["options"]
     #index:message populate file dict
     #if data exists its part of the file and should be stored
     if len(data) != 0:
@@ -195,39 +203,3 @@ else:
 
 
 
-
-'''
-#test opening and splitting a header from the message
-
-message1 = "GET@1@storeFileTest.py@message1 data fart "
-message2 = "GET@2@storeFileTest.py@message2 data fart "
-message3 = "GET@3@storeFileTest.py@message3 data fart  "
-
-
-splitMessage1 = message1.split("@")
-splitMessage2 = message2.split("@")
-splitMessage3 = message3.split("@")
-
-allMessages = [splitMessage1,splitMessage2,splitMessage3]
-
-fileDict = {}
-for msg in allMessages :
-    fileDict[msg[1]] = msg[-1]
-
-
-print fileDict
-
-orderedFileDict = collections.OrderedDict(sorted(fileDict.items()))
-
-print 'ordered dict'
-print orderedFileDict
-
-#ok now stor that shit in a file
-
-#create a file
-file = open(splitMessage1[2], "w")
-file.write(splitMessage1[-1])
-file.write(splitMessage2[-1])
-file.write(splitMessage3[-1])
-file.close()
-'''
