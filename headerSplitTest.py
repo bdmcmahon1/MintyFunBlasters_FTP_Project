@@ -104,10 +104,19 @@ def saveFile(reqHead):
     print "File Transter complete... Writing File to disk..."
     #filename = open(reqHead.options, "w")
     filename = open('outputTest.txt', "w")
-    for keys in fileDict:
-        filename.write(fileDict[keys])
-    filename.close()
+    Keys = fileDict.keys()
+    Keys.sort()
+    # keys are strings - change them to integers then sort all of them
+    intDict = {int(k) : v for k, v in fileDict.items()}
+    print "sorted"
+    print intDict
 
+    #print sorted(fileDict.keys)
+    for key in sorted(intDict.iterkeys()):
+        filename.write(intDict[key])
+        
+    filename.close()
+    #print fileDict
     print "File saved to disk"
 
 
