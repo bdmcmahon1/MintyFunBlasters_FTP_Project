@@ -59,7 +59,7 @@ def sockRead(msgResend, clientAddress):
                 state=0 #reset state variable
                 print "connection to server lost"
                 message = ""
-                return message
+                return message, clientAddress
         else:
             #something present in the sockets - read it and return it
             for socket in readReady: #dont forget to calculate RTT
