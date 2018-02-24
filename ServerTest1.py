@@ -76,7 +76,7 @@ while True:
                     seqNumber = seqNumber + 1
                     
                 #Send EOF
-                sentEOF = sock.sendto(emptyhdr.Write(), address)    
+                sentEOF = sock.sendto(emptyhdr.Write() + "", address)    
             elif recvHDR["datatype"] == "PUT":
                 putfile = "true"
             elif recvHDR["datatype"] == "DATA":
