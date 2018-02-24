@@ -40,6 +40,12 @@ def sockRead(msgResend, clientAddress):
 
     totalTimeout = 0
     
+    # Get message header
+    if len(msgResend) > 0:
+        msgHeader = msgResend[:40]
+        msgHDR = Header.Header()
+        msgHDR.Write()
+        messageHeader = msgHDR.Read(msgHeader)
     #check sockets of server
     while(1):
 
@@ -47,7 +53,7 @@ def sockRead(msgResend, clientAddress):
         # if nothing is present in the sockets print a timeout error
         if not readReady and not writeReady and not errorReady:
             print "timeout: No communication from the client"
-            sock.sendto(msgResend, clientAddress)
+            #sock.sendto(msgResend, clientAddress)
             totalTimeout+=1
             if totalTimeout == 5:
                 state=0 #reset state variable
@@ -58,6 +64,14 @@ def sockRead(msgResend, clientAddress):
             #something present in the sockets - read it and return it
             for socket in readReady: #dont forget to calculate RTT
                 message, serverAddr = socket.recvfrom(2048)
+                #Confirm ACK
+                ackmsgHeader = message[:40]
+                ackHDR = Header.Header()
+                ackHDR.Write()
+                ackHeader = ackHDR.Read(ackmsgHeader)
+                if ackHeader["datatype"] != "ACK":
+                    if ackHeader["sequencenumber"] != messageHeader["sequencenumber"]:
+                        continue
                 print "packet recieved..."
         
             return message, serverAddr
