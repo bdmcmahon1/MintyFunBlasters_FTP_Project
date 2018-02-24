@@ -82,8 +82,11 @@ def getFile(reqHead):
             print "message recieved and ready for interpretation"
             
             #parse message and populate the dictionary
-            splitMessage,data,index,fileName = parseMessage(message)
-
+            data,index,fileName = parseMessage(message)
+            print "data after parse"
+            print data
+            print "len of data"
+            print len(data)
             #send an ack back to the server that it got the message
             sendAck(index,fileName)
 
@@ -97,11 +100,12 @@ def getFile(reqHead):
 #______________________________________________________________________________________________________
 
 def saveFile(reqHead):
-    
+    global fileDict
     print "File Transter complete... Writing File to disk..."
-    filename = open(reqHead.options, "w")
-    for keys in fdict:
-        filename.write(fdict[keys])
+    #filename = open(reqHead.options, "w")
+    filename = open('outputTest.txt', "w")
+    for keys in fileDict:
+        filename.write(fileDict[keys])
     filename.close()
 
     print "File saved to disk"
@@ -149,7 +153,7 @@ def sockRead():
             print readReady
             totalTimeout+=1
             if totalTimeout == 5:
-                state=0  f#reset state variable
+                state=0  #reset state variable
                 print "connection to server lost"
                 message = ""
                 return message
@@ -164,23 +168,27 @@ def sockRead():
 #______________________________________________________________________________________________________
 
 def parseMessage(message):
-    hdr = Header.Header()
-    headerData = message[0:39]
+    hdr = Header()
+    hdr.Write()
+    print"msg"
+    print message
+    headerData = message[:39]
+    print repr(headerData)
     headerdict = hdr.Read(headerData)
 
     
 
     #splitMessage = message.split("@")
     
-    data = message{39:]
-    index = hdr["sequencenumber"]
-    fileName = hdr["options"]
+    data = message[40:]
+    index = headerdict["sequencenumber"]
+    fileName = headerdict["options"]
     #index:message populate file dict
     #if data exists its part of the file and should be stored
     if len(data) != 0:
         fileDict[index] = data
     
-    return splitMessage, data, index, fileName
+    return data, index, fileName
 
 
 #______________________________________________________________________________________________________
