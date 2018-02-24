@@ -70,8 +70,9 @@ def sockRead(msgResend, clientAddress):
                 ackHDR.Write()
                 ackHeader = ackHDR.Read(ackmsgHeader)
                 if ackHeader["datatype"] != "ACK":
-                    if ackHeader["sequencenumber"] != messageHeader["sequencenumber"]:
-                        continue
+                    continue
+                if ackHeader["sequencenumber"] != messageHeader["sequencenumber"]:
+                    continue
                 print "packet recieved..."
         
             return message, serverAddr
