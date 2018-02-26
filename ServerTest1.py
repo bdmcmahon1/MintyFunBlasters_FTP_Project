@@ -8,6 +8,8 @@ import select
 msgSize = 60
 kilobytes = 1024
 megabytes = kilobytes * 1000
+state = 0
+fileDict = {}
 
 # Create empty packet header
 emptyhdr = Header.Header()
@@ -85,8 +87,98 @@ def sockRead(msgResend, clientAddress):
             return message, serverAddr
 
 #______________________________________________________________________________________________________
+#function for reading the sockets
+def sockReadPUT():
+    #define global variables
+    global state
 
+    print "waiting to hear from server"
+    #for reading msgs from server
+    readSock = [sock]
+    # empty list since we arent writing to sockets(used in queue
+    writeSock = []
+    # empty list - not interested in errors from select
+    errorSock = []
+    # time out variable since select has timeout built in
+    timeout = 1
+
+    totalTimeout = 0
+    
+    #check sockets of server
+    while(1):
+
+        readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
+        # if nothing is present in the sockets print a timeout error
+        if not readReady and not writeReady and not errorReady:
+            print "timeout: No communication from the server"
+            print readReady
+            totalTimeout+=1
+            if totalTimeout == 5:
+                state=0  #reset state variable
+                print "connection to server lost"
+                message = ""
+                return message
+        else:
+            #something present in the sockets - read it and return it
+            for socket in readReady: #dont forget to calculate RTT
+                message, serverAddr = socket.recvfrom(2048)
+                print "packet recieved..."
+        
+            return message
 #sock.setblocking(0)
+def parseMessage(message):
+    hdr = Header()
+    hdr.Write()
+    print"msg"
+    print message
+    headerData = message[:39]
+    print repr(headerData)
+    headerdict = hdr.Read(headerData)
+
+    
+
+    #splitMessage = message.split("@")
+    
+    data = message[40:]
+    index = headerdict["sequencenumber"]
+    fileName = headerdict["options"]
+    #index:message populate file dict
+    #if data exists its part of the file and should be stored
+    if len(data) != 0:
+        fileDict[index] = data
+    
+    return data, index, fileName
+
+def saveFile(reqHead):
+    global fileDict
+    print "File Transter complete... Writing File to disk..."
+    #filename = open(reqHead.options, "w")
+    filename = open(reqHead["options"], "w")
+    Keys = fileDict.keys()
+    Keys.sort()
+    # keys are strings - change them to integers then sort all of them
+    intDict = {int(k) : v for k, v in fileDict.items()}
+    print "sorted"
+    print intDict
+
+    #print sorted(fileDict.keys)
+    for key in sorted(intDict.iterkeys()):
+        filename.write(intDict[key])
+        
+    filename.close()
+    #print fileDict
+    print "File saved to disk"
+
+def sendAck(index,fileName):
+    ack = Header()
+    #populate it with the sequencenum and file name and ACK message type
+    ack.datatype = "ACK"
+    ack.sequencenumber = index
+    ack.options = fileName
+    ackHead = ack.Write()
+
+    #send just the ACK header
+    sock.sendto(ackHead, server_address)
 
 while True:
     print >>sys.stderr, '\nwaiting to receive message'
@@ -151,6 +243,38 @@ while True:
                 sentEOF = sock.sendto(emptyhdr.Write() + "", address)    
             elif recvHDR["datatype"] == "PUT":
                 putfile = "true"
+                #Send ACK 0
+                sendAck(0, recvHDR["options"])
+                #Stop-and-wait here for response; use readsock
+                #Get data packet and store to dictionary and repeat
+                #Need to check for EOF
+                #continuously check the socket and handle the mssage storing it to dict
+                while(1):
+                    #check and read the socket
+                    message=sockReadPUT()
+                    
+                    if len(message)==0:
+                        #server lost and get out of function
+                        print "no message"
+                    else: #there was a message from the server
+                        #split the header and message up
+                        print "message recieved and ready for interpretation"
+                        
+                        #parse message and populate the dictionary
+                        data,index,fileName = parseMessage(message)
+                        print "data after parse"
+                        print data
+                        print "len of data"
+                        print len(data)
+                        #send an ack back to the server that it got the message
+                        sendAck(index,fileName)
+            
+                        #check to see if EOF - if EOF break then write to file
+                        if len(data) == 0:
+                            print "File Transfer Complete"
+                            saveFile(recvHDR)
+                            break
+                            #Write file
             elif recvHDR["datatype"] == "DATA":
                 data = "true"
             elif recvHDR["datatype"] == "CLOSE":
