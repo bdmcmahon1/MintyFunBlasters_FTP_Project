@@ -30,8 +30,8 @@ def sockRead(msgResend, clientAddress):
     #define global variables
     global state
 
-    print "waiting to hear from server"
-    #for reading msgs from server
+    print "waiting to hear from client"
+    #for reading msgs from client
     readSock = [sock]
     # empty list since we arent writing to sockets(used in queue
     writeSock = []
@@ -59,7 +59,7 @@ def sockRead(msgResend, clientAddress):
             totalTimeout+=1
             if totalTimeout == 5:
                 state=0 #reset state variable
-                print "connection to server lost"
+                print "connection to client lost"
                 message = ""
                 return message, clientAddress
         else:
@@ -92,7 +92,7 @@ def sockReadPUT():
     #define global variables
     global state
 
-    print "waiting to hear from server"
+    print "waiting to hear from client"
     #for reading msgs from server
     readSock = [sock]
     # empty list since we arent writing to sockets(used in queue
@@ -110,12 +110,12 @@ def sockReadPUT():
         readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
         # if nothing is present in the sockets print a timeout error
         if not readReady and not writeReady and not errorReady:
-            print "timeout: No communication from the server"
+            print "timeout: No communication from the client"
             print readReady
             totalTimeout+=1
             if totalTimeout == 5:
                 state=0  #reset state variable
-                print "connection to server lost"
+                print "connection to client lost"
                 message = ""
                 return message
         else:
