@@ -173,8 +173,8 @@ def sendAck(index,fileName):
     ack = Header.Header()
     #populate it with the sequencenum and file name and ACK message type
     ack.datatype = "ACK"
-    ack.sequencenumber = index
-    ack.options = fileName
+    ack.sequencenumber = str(index)
+    ack.options = str(fileName)
     ackHead = ack.Write()
 
     #send just the ACK header
