@@ -71,7 +71,7 @@ def inputs():
 
 
 #function for getting file
-def getFile(reqHead):
+def fileGet(reqHead):
     #define global variables
     global state
     global fileDict
@@ -218,7 +218,7 @@ def parseMessage(message):
 
 #______________________________________________________________________________________________________
 #function for put file request
-def putFile(reqHead):
+def filePut(reqHead):
     #define global variables
     global state
     global fileDict
@@ -229,12 +229,12 @@ def putFile(reqHead):
     
     fileDict = {}
     #send request to server
-    messageSend = reqHeader
+    messageSend = reqHead
     print "header built. Sending PUT request to server..."
     clientSocket.sendto(messageSend, serverAddr)
     #wait for ACK regarding request
     #check and read the socket
-    message=sockRead(messageSend)
+    message=sockReadPut(messageSend)
     #if message is recieved split message to hader and data to check ACK
     data, index, filename, messageType = parseMessage(message)
     #check for ack
@@ -361,9 +361,9 @@ state,reqHead = inputs()
 print state, reqHead
 
 if state == 1:
-    getFile(reqHead);
+    fileGet(reqHead)
 else:
-    putFile(reqHead);
+    filePut(reqHead)
 
 
 
