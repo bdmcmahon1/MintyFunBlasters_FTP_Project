@@ -67,9 +67,6 @@ def inputs():
     #return the header meant to be sent with the request
     return state, reqHead
 
-#______________________________________________________________________________________________________
-
-
 #function for getting file
 def fileGet(reqHead):
     #define global variables
@@ -106,9 +103,6 @@ def fileGet(reqHead):
                 #clear file Dict for next operation
                 fileDict = {}
                 break
-            
-    #wait for data
-#______________________________________________________________________________________________________
 
 def saveFile(reqHead):
     global fileDict
@@ -130,9 +124,6 @@ def saveFile(reqHead):
     #print fileDict
     print "File saved to disk"
 
-
-#______________________________________________________________________________________________________
-
 def sendAck(index,fileName):
     ack = Header()
     #populate it with the sequencenum and file name and ACK message type
@@ -143,9 +134,7 @@ def sendAck(index,fileName):
 
     #send just the ACK header
     clientSocket.sendto(ackHead, serverAddr)
-    
 
-#______________________________________________________________________________________________________
 #function for reading the sockets
 def sockRead():
     #define global variables
@@ -195,7 +184,7 @@ def parseMessage(message):
     else:
         hdr = Header()
         hdr.Write()
-        print"msg"
+        print "Message reieved from server: "
         print message
         headerData = message[:39]
         print repr(headerData)
@@ -265,6 +254,7 @@ def filePut(reqHead):
     seqNumber = 1
     #for i (start at 0) to end of file (i increments by message size
     for i in range(0, filebytes+1, messageSize):
+        print ('Building packet [%d]' % i)
         #Create data header
         dataHDR = Header()
         dataHDR.datatype = "DATA"
@@ -288,15 +278,18 @@ def filePut(reqHead):
             messageSend = dataheader + binary_file.read(messageSize)
                         
             # Send message sequence
+            print ('sending packet [%d]...' % i)
             clientSocket.sendto(messageSend, serverAddr)
                     
             #STOP-AND-WAIT
+            print ('checking for ACK for packet [%d]' % i)
             serverMessage = sockReadPut(messageSend)
             #check if it is an ACK - parse message first
             data, index, filename, messageType = parseMessage(message)
             #if ack is for correct sequence number increment seq num and start the loop over again
             if messageType == "ACK":
                 seqNumber = seqNumber + 1
+                print ('Packet [%d] succesfully sent!' % i)
             #if not ack for correct sequence number restart loop at current sequence number
             #if there was a total timeoutleave this loop - check again in the for loop
             elif len(serverMessage) == 0:
