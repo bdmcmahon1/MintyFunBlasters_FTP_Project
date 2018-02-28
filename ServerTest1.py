@@ -127,7 +127,7 @@ def sockReadPUT():
             return message
 #sock.setblocking(0)
 def parseMessage(message):
-    hdr = Header()
+    hdr = Header.Header()
     hdr.Write()
     print"msg"
     print message
@@ -170,7 +170,7 @@ def saveFile(reqHead):
     print "File saved to disk"
 
 def sendAck(index,fileName):
-    ack = Header()
+    ack = Header.Header()
     #populate it with the sequencenum and file name and ACK message type
     ack.datatype = "ACK"
     ack.sequencenumber = index
