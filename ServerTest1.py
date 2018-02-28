@@ -155,6 +155,8 @@ def saveFile(reqHead):
     #filename = open(reqHead.options, "w")
     #filename = open(reqHead["options"], "w")
     filename = open("output.txt", "w")
+    print "File DICT"
+    print fileDict
     Keys = fileDict.keys()
     Keys.sort()
     # keys are strings - change them to integers then sort all of them
