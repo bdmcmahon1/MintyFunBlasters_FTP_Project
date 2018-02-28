@@ -151,9 +151,10 @@ def parseMessage(message):
 
 def saveFile(reqHead):
     global fileDict
-    print "File Transter complete... Writing File to disk..."
+    print "File Transfer complete... Writing File to disk..."
     #filename = open(reqHead.options, "w")
-    filename = open(reqHead["options"], "w")
+    #filename = open(reqHead["options"], "w")
+    filename = open("output.txt", "w")
     Keys = fileDict.keys()
     Keys.sort()
     # keys are strings - change them to integers then sort all of them
