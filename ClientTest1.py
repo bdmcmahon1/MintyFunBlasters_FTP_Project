@@ -355,15 +355,15 @@ def sockReadPut(messageSend):
 
 
 #asdk for inputs and check program status
+while(1):
+	state,reqHead = inputs()
 
-state,reqHead = inputs()
+	print state, reqHead
 
-print state, reqHead
-
-if state == 1:
-    fileGet(reqHead)
-else:
-    filePut(reqHead)
+	if state == 1:
+		fileGet(reqHead)
+	else:
+		filePut(reqHead)
 
 
 
