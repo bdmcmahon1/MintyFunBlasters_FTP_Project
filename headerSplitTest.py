@@ -74,7 +74,7 @@ def inputs():
 def getFile(reqHead):
     #define global variables
     global state
-    global fileDict = {}
+    global fileDict
     #send request to server
     clientSocket.sendto(reqHead, serverAddr)
     print "request sent - waiting for response"
@@ -190,7 +190,7 @@ def sockRead():
 def parseMessage(message):
     #if server message is an empty msg with no header - total timeout
     if len(message) == 0:
-        return ,0,0,0,0
+        return 0,0,0,0
     #otherwise handle the file as normal
     else:
         hdr = Header()
@@ -211,7 +211,7 @@ def parseMessage(message):
         #index:message populate file dict
         #if data exists its part of the file and should be stored
         if len(data) != 0:
-        fileDict[index] = data
+			fileDict[index] = data
         
         return data, index, fileName, messageType
 
@@ -221,11 +221,13 @@ def parseMessage(message):
 def putFile(reqHead):
     #define global variables
     global state
-    global fileDict = {}
+    global fileDict
     global putFile
     global messageSize
     global serverAddr
     global emptyhdr
+    
+    fileDict = {}
     #send request to server
     messageSend = reqHeader
     print "header built. Sending PUT request to server..."
@@ -240,8 +242,8 @@ def putFile(reqHead):
         #open file and break it up into fileDict
         print "Server received request. Preparing file for transport..."
         #read file and populate dictionary with it
-    else if len(message) == 0:
-        Print "Server Timed out. Closing application..."
+    elif (len(message) == 0):
+        print "Server Timed out. Closing application."
         return
     
     
@@ -294,12 +296,12 @@ def putFile(reqHead):
                 seqNumber = seqNumber + 1
             #if not ack for correct sequence number restart loop at current sequence number
             #if there was a total timeoutleave this loop - check again in the for loop
-            else if len(serverMessage) == 0:
+            elif len(serverMessage) == 0:
                 break
                 #file closes automatically with with loop type
     #if there was a total timeout leave the for loop        
-    if len(serverMessage) == 0:
-           break                  
+		if len(serverMessage) == 0:
+			break                  
     #Send EOF (empty data message with dummt header
   
     sentEOF = sock.sendto(emptyhdr.Write() + "", address)
