@@ -141,6 +141,8 @@ def parseMessage(message):
     
     data = message[40:]
     index = headerdict["sequencenumber"]
+    print "index"
+    print index
     fileName = headerdict["options"]
     #index:message populate file dict
     #if data exists its part of the file and should be stored
@@ -172,7 +174,7 @@ def saveFile(reqHead):
     #print fileDict
     print "File saved to disk"
 
-def sendAck(index,fileName):
+def sendAck(index,fileName, clientAddress):
     ack = Header.Header()
     #populate it with the sequencenum and file name and ACK message type
     ack.datatype = "ACK"
@@ -181,7 +183,7 @@ def sendAck(index,fileName):
     ackHead = ack.Write()
 
     #send just the ACK header
-    sock.sendto(ackHead, server_address)
+    sock.sendto(ackHead, clientAddress)
 
 while True:
     print >>sys.stderr, '\nwaiting to receive message'
@@ -247,7 +249,7 @@ while True:
             elif recvHDR["datatype"] == "PUT":
                 putfile = "true"
                 #Send ACK 0
-                sendAck(0, recvHDR["options"])
+                sendAck(0, recvHDR["options"], address)
                 #Stop-and-wait here for response; use readsock
                 #Get data packet and store to dictionary and repeat
                 #Need to check for EOF
@@ -270,7 +272,7 @@ while True:
                         print "len of data"
                         print len(data)
                         #send an ack back to the server that it got the message
-                        sendAck(index,fileName)
+                        sendAck(index,fileName,address)
             
                         #check to see if EOF - if EOF break then write to file
                         if len(data) == 0:
