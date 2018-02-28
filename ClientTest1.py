@@ -250,8 +250,11 @@ def filePut(reqHead):
     #brians way of doing things---------------------------------
         
     #open file and get relevant data out of it for header
+    print putFile
     FILE = open(putFile, "rb")
-    filebytes = len(FILE)
+    fileData = FILE.read()
+    
+    filebytes = len(fileData)
     filepackets = filebytes/messageSize
     packetsize = 100
     FILE.close()
@@ -261,9 +264,9 @@ def filePut(reqHead):
     #set up sequence number for sending data
     seqNumber = 1
     #for i (start at 0) to end of file (i increments by message size
-    for i in range(0, filebytes+1, msgSize):
+    for i in range(0, filebytes+1, messageSize):
         #Create data header
-        dataHDR = Header.Header()
+        dataHDR = Header()
         dataHDR.datatype = "DATA"
         dataHDR.filesize = str(filebytes)
         dataHDR.numberofpackets = str(filepackets)
@@ -278,14 +281,14 @@ def filePut(reqHead):
         # Create the message sequence and join with the header
         #fileOBJ = open(filepath)
         #open the file > step fid in the file where i is (0 then 60 then 120....)
-        with open(filepath, "rb") as binary_file:
+        with open(putFile, "rb") as binary_file:
             #Seek to specified position
             binary_file.seek(i)
             #create message with dataheader and reading msgSize bytes from file
             messageSend = dataheader + binary_file.read(messageSize)
                         
             # Send message sequence
-            clientSocketsock.sendto(messageBytes, address)
+            clientSocket.sendto(messageSend, serverAddr)
                     
             #STOP-AND-WAIT
             serverMessage = sockReadPut(messageSend)
@@ -304,7 +307,7 @@ def filePut(reqHead):
 			break                  
     #Send EOF (empty data message with dummt header
   
-    sentEOF = sock.sendto(emptyhdr.Write() + "", address)
+    sentEOF = clientSocket.sendto(emptyhdr.Write() + "", serverAddr)
                 
 
     #-----------------------------------------------------------
