@@ -248,16 +248,20 @@ while True:
                 sentEOF = sock.sendto(emptyhdr.Write() + "", address)    
             elif recvHDR["datatype"] == "PUT":
                 putfile = "true"
+                print "PUT message received"
                 #Send ACK 0
                 sendAck(0, recvHDR["options"], address)
+                print "PUT ACK SENT"
                 #Stop-and-wait here for response; use readsock
                 #Get data packet and store to dictionary and repeat
                 #Need to check for EOF
                 #continuously check the socket and handle the mssage storing it to dict
                 while(1):
                     #check and read the socket
+                    print "Read Sock for DATA after ACK sent for PUT"
                     message=sockReadPUT()
-                    
+                    print "DATA message from PUT routine"
+                    print message
                     if len(message)==0:
                         #server lost and get out of function
                         print "no message"
