@@ -17,14 +17,15 @@ emptyhdr.Write()
 
 messageSize = 60
 #define constants
-serverAddr =('localhost',10000)
+serverAddr =('localhost',50000)
+clientAddr = ('localhost',25000)
 
 
 
 #define and create client
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.setblocking(0)# set blocking to false so timeouts work
-
+clientSocket.bind(clientAddr)
 #______________________________________________________________________________________________________
 
 #function for gathering inputs
@@ -34,23 +35,29 @@ def inputs():
     global putFile
     #create header to populate request message with
     while(1):
-        datatype = raw_input("GET or PUT a file?\n")
+        #sys arg input scheme
+        datatype = sys.argv[1]
+        #original input scheme
+        #datatype = raw_input("GET or PUT a file?\n")
         if (datatype == "GET") or (datatype == "PUT"):
             break
         else:
             print "Please input a proper request (GET or PUT)"
     while(1):
-        filename = raw_input("What file do you want/have?\n")
-        if datatype == "PUT":
-            if os.path.isfile(filename):
-                print "Fetching File..."
-                putFile = filename
-                
-                break
-            else:
-                print "File does not exist. Choose another file..."
-        if datatype == "GET":
-            break
+		#sysarg input
+		filename = sys.argv[2]	
+		#original input method
+		#filename = raw_input("What file do you want/have?\n")
+		if datatype == "PUT":
+			if os.path.isfile(filename):
+				print "Fetching File..."
+				putFile = filename
+				
+				break
+			else:
+				print "File does not exist. Choose another file..."
+		if datatype == "GET":
+			break
     print"Processing Request..."
 
     #create instance of header class
@@ -158,7 +165,7 @@ def sockRead():
         readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
         # if nothing is present in the sockets print a timeout error
         if not readReady and not writeReady and not errorReady:
-            print "timeout: No communication from the server"
+            print "timeout: No communication from the server-----------------------------------------------------------"
             print readReady
             totalTimeout+=1
             if totalTimeout == 5:
@@ -278,7 +285,7 @@ def filePut(reqHead):
             messageSend = dataheader + binary_file.read(messageSize)
                         
             # Send message sequence
-            print ('sending packet [%d]...' % i)
+            print ('sending packet [%d]...' % seqNumber)
             clientSocket.sendto(messageSend, serverAddr)
                     
             #STOP-AND-WAIT
@@ -350,16 +357,17 @@ def sockReadPut(messageSend):
 #______________________________________________________________________________________________________
 
 
+#comment out while loop for sys arg inputs
 #asdk for inputs and check program status
-while(1):
-	state,reqHead = inputs()
+#while(1):
+state,reqHead = inputs()
 
-	print state, reqHead
+print state, reqHead
 
-	if state == 1:
-		fileGet(reqHead)
-	else:
-		filePut(reqHead)
+if state == 1:
+	fileGet(reqHead)
+else:
+	filePut(reqHead)
 
 
 
