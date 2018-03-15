@@ -29,6 +29,7 @@ sock.bind(server_address)
 #______________________________________________________________________________________________________
 #function for reading the sockets
 def sockRead(sequenceNumber, clientAddress):
+    #Use dictionary as parameter? With each packet in window? For resend
     #define global variables
     global state
 
@@ -244,8 +245,11 @@ while True:
                     
                 #Loop through the window size, and send all messages beginning with sequence 1
                 beginWindow = 1
+                windowDictionary = {}
                 for sequenceNumber, binaryData in binaryDictionary.items():
                     if beginWindow <= windowSize:
+                        #Add message to dictionary
+                        windowDictionary[sequenceNumber] = binaryData
                         # Send message
                         sock.sendto(binaryData, address)
                         beginWindow = beginWindow + 1
@@ -253,9 +257,11 @@ while True:
                         #last_ACKed = sequenceNumber
                     else:
                         #Sock read with this sequence, and if ack received, continue on with next batch
-                        clientMessage = sockRead(sequenceNumber, address)
+                        clientMessage = sockRead(sequenceNumber - 1, address)
                         #Reset window
                         beginWindow = 1
+                        # Reset window dictionary
+                        windowDictionary = {}
                         #Save the last ack (sequence number) in the global variable
                         last_ACKed = sequenceNumber
                 #Send EOF
