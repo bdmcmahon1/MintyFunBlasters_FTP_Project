@@ -17,15 +17,14 @@ emptyhdr.Write()
 
 messageSize = 60
 #define constants
-serverAddr =('localhost',50000)
-clientAddr = ('localhost',25000)
+serverAddr =('localhost',10000)
 
 
 
 #define and create client
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.setblocking(0)# set blocking to false so timeouts work
-clientSocket.bind(clientAddr)
+
 #______________________________________________________________________________________________________
 
 #function for gathering inputs
@@ -35,29 +34,23 @@ def inputs():
     global putFile
     #create header to populate request message with
     while(1):
-        #sys arg input scheme
-        datatype = sys.argv[1]
-        #original input scheme
-        #datatype = raw_input("GET or PUT a file?\n")
+        datatype = raw_input("GET or PUT a file?\n")
         if (datatype == "GET") or (datatype == "PUT"):
             break
         else:
             print "Please input a proper request (GET or PUT)"
     while(1):
-		#sysarg input
-		filename = sys.argv[2]	
-		#original input method
-		#filename = raw_input("What file do you want/have?\n")
-		if datatype == "PUT":
-			if os.path.isfile(filename):
-				print "Fetching File..."
-				putFile = filename
-				
-				break
-			else:
-				print "File does not exist. Choose another file..."
-		if datatype == "GET":
-			break
+        filename = raw_input("What file do you want/have?\n")
+        if datatype == "PUT":
+            if os.path.isfile(filename):
+                print "Fetching File..."
+                putFile = filename
+                
+                break
+            else:
+                print "File does not exist. Choose another file..."
+        if datatype == "GET":
+            break
     print"Processing Request..."
 
     #create instance of header class
@@ -73,6 +66,9 @@ def inputs():
         state=2
     #return the header meant to be sent with the request
     return state, reqHead
+
+#______________________________________________________________________________________________________
+
 
 #function for getting file
 def fileGet(reqHead):
@@ -110,6 +106,9 @@ def fileGet(reqHead):
                 #clear file Dict for next operation
                 fileDict = {}
                 break
+            
+    #wait for data
+#______________________________________________________________________________________________________
 
 def saveFile(reqHead):
     global fileDict
@@ -131,6 +130,9 @@ def saveFile(reqHead):
     #print fileDict
     print "File saved to disk"
 
+
+#______________________________________________________________________________________________________
+
 def sendAck(index,fileName):
     ack = Header()
     #populate it with the sequencenum and file name and ACK message type
@@ -141,7 +143,9 @@ def sendAck(index,fileName):
 
     #send just the ACK header
     clientSocket.sendto(ackHead, serverAddr)
+    
 
+#______________________________________________________________________________________________________
 #function for reading the sockets
 def sockRead():
     #define global variables
@@ -165,7 +169,7 @@ def sockRead():
         readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
         # if nothing is present in the sockets print a timeout error
         if not readReady and not writeReady and not errorReady:
-            print "timeout: No communication from the server-----------------------------------------------------------"
+            print "timeout: No communication from the server"
             print readReady
             totalTimeout+=1
             if totalTimeout == 5:
@@ -191,7 +195,7 @@ def parseMessage(message):
     else:
         hdr = Header()
         hdr.Write()
-        print "Message reieved from server: "
+        print"msg"
         print message
         headerData = message[:39]
         print repr(headerData)
@@ -261,7 +265,6 @@ def filePut(reqHead):
     seqNumber = 1
     #for i (start at 0) to end of file (i increments by message size
     for i in range(0, filebytes+1, messageSize):
-        print ('Building packet [%d]' % i)
         #Create data header
         dataHDR = Header()
         dataHDR.datatype = "DATA"
@@ -285,18 +288,15 @@ def filePut(reqHead):
             messageSend = dataheader + binary_file.read(messageSize)
                         
             # Send message sequence
-            print ('sending packet [%d]...' % seqNumber)
             clientSocket.sendto(messageSend, serverAddr)
                     
             #STOP-AND-WAIT
-            print ('checking for ACK for packet [%d]' % i)
             serverMessage = sockReadPut(messageSend)
             #check if it is an ACK - parse message first
             data, index, filename, messageType = parseMessage(message)
             #if ack is for correct sequence number increment seq num and start the loop over again
             if messageType == "ACK":
                 seqNumber = seqNumber + 1
-                print ('Packet [%d] succesfully sent!' % i)
             #if not ack for correct sequence number restart loop at current sequence number
             #if there was a total timeoutleave this loop - check again in the for loop
             elif len(serverMessage) == 0:
@@ -357,17 +357,16 @@ def sockReadPut(messageSend):
 #______________________________________________________________________________________________________
 
 
-#comment out while loop for sys arg inputs
 #asdk for inputs and check program status
-#while(1):
-state,reqHead = inputs()
+while(1):
+	state,reqHead = inputs()
 
-print state, reqHead
+	print state, reqHead
 
-if state == 1:
-	fileGet(reqHead)
-else:
-	filePut(reqHead)
+	if state == 1:
+		fileGet(reqHead)
+	else:
+		filePut(reqHead)
 
 
 
