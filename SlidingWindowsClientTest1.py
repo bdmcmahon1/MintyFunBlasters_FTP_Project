@@ -75,6 +75,9 @@ def fileGet(reqHead):
     #define global variables
     global state
     global fileDict
+    
+    acklist = []
+    lastACK = 0
     #send request to server
     clientSocket.sendto(reqHead, serverAddr)
     print "request sent - waiting for response"
@@ -89,15 +92,21 @@ def fileGet(reqHead):
         else: #there was a message from the server
             #split the header and message up
             print "message recieved and ready for interpretation"
-            
-            #parse message and populate the dictionary
             data,index,fileName,messageType = parseMessage(message)
-            print "data after parse"
-            print data
-            print "len of data"
-            print len(data)
-            #send an ack back to the server that it got the message
-            sendAck(index,fileName)
+            print 'message parsed and stored - Seq number: %d' % index
+            print 'checking for best cumulitive ACK'
+            checkACK(index,acklist,lastACK,filename)
+            
+            #old shit
+           
+            ##parse message and populate the dictionary
+            #data,index,fileName,messageType = parseMessage(message)
+            #print "data after parse"
+            #print data
+            #print "len of data"
+            #print len(data)
+            ##send an ack back to the server that it got the message
+            #sendAck(index,fileName)
 
             #check to see if EOF - if EOF break then write to file
             if len(data) == 0:
@@ -106,7 +115,63 @@ def fileGet(reqHead):
                 #clear file Dict for next operation
                 fileDict = {}
                 break
-            
+#______________________________________________________________________________________________________
+
+def checkACK(current_ack,acklist,lastACK,filename):
+	#check for duplicate message
+	if current_ack in acklist:
+		print'duplicat message - ignore and dont send ACK'
+		return 
+
+	acklist.append(current_ack)
+	print acklist
+	if 1 not in acklist:
+		print 'still waiting on first packet in sequence'
+		return
+		
+	print 'sorting list of acks recieved'
+	sorted_acklist = sorted(acklist)
+	#print sorted_acklist
+	
+	
+	print 'checking for missing acks'
+	#test to see if all the acks are there
+	
+	#number of times for loop should iterate if all is good
+	finalCheck = len(sorted_acklist)-lastACK
+	cnt=0
+	if len(sorted_acklist)>1:
+		for i in range(lastACK,len(sorted_acklist)):
+			print 'checking index %d' % i
+			check=sorted_acklist[i]-sorted_acklist[i-1]
+			#print 'check: %d' % check
+			if check > 1:
+				
+				print 'missing a message'
+				bestACK = sorted_acklist[i-1]
+				if bestACK == lastACK:
+					print 'previous ACK sent still best cumulitive ACK'
+					break
+				else:
+					print 'Best cumulitive ack possible: %d' % sorted_acklist[i-1]
+					print 'sending best cumulitive ack'
+					sendACK(bestACK,filename)
+					break
+			#if no issues the bestACK is the current value in the index
+			bestACK = sorted_acklist[i]
+				
+		
+			cnt=cnt+1
+			
+	if cnt == finalCheck:
+		print 'All messages present - latest message is best ack \nSend ack for latest message recieved: %d' % bestACK
+		#update lastACK
+		lastACK = bestACK
+		sendACK(bestACK,filename)
+	ackindex = ackindex+1
+	print 'ready for another message'            
+
+	return
     #wait for data
 #______________________________________________________________________________________________________
 

@@ -31,14 +31,14 @@ while 1:
 	print 'checking for missing acks'
 	#test to see if all the acks are there
 	
-	#number of times for loop should iterate if all is good
+	#finalcheck is number of times for loop should iterate if all is good
 	finalCheck = len(sorted_acklist)-lastACK
 	cnt=0
 	if len(sorted_acklist)>1:
 		for i in range(lastACK,len(sorted_acklist)):
 			print 'checking index %d' % i
 			check=sorted_acklist[i]-sorted_acklist[i-1]
-			#print 'check: %d' % check
+			
 			if check > 1:
 				
 				print 'missing a message'
@@ -53,28 +53,28 @@ while 1:
 			#ISSUE HERE - IF LAST NUMBER REPEAT IT WONT CHECK THE END OF THE LIST
 			
 				
-			#if last pass through for loop and check was ok	
-			if i == sorted_acklist[-1] and check == 1:
-				print 'no missing packets - best cumulitive ack is latest message'
-				print 'sending latest message ACK'
+			
 			
 			bestACK = sorted_acklist[i]	
+			lastACK = bestACK
 		#if the for loop finishes without missing packets
 			cnt=cnt+1
 			
 			#check if everything went smoothly and it is the final check of the for loop (highest ack receieved)
 
 	
-	else:
-		if acklist[ackindex] == 1:
-			print 'first packet recieved - ACK sent'
-			lastACK=1
-		else:
-			print 'first packet recieved not first packet sent \ndont send ack - Waiting for more packets'
-			lastACK = 1
-			#not sure how to handle the inisial part being 0 - for loop affected
+	#else:
+		#if acklist[ackindex] == 1:
+			#print 'first packet recieved - ACK sent'
+			#lastACK=1
+		#else:
+			#print 'first packet recieved not first packet sent \ndont send ack - Waiting for more packets'
+			##lastACK = 1
+			##not sure how to handle the inisial part being 0 - for loop affected
 	
 	if cnt == finalCheck:
-		print 'All messages present - latest message is best ack \n Send ack for message just recieved'
+		print 'All messages present - latest message is best ack \n Send ack for message latest message recieved: %d' % bestACK
+	
 	ackindex = ackindex+1
 	print 'ready for another message'
+	
