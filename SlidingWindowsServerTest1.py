@@ -3,6 +3,8 @@ import sys
 import math
 import Header
 import select
+import time
+import datetime
 
 # Definitions
 last_ACKed = 0
@@ -28,7 +30,7 @@ sock.bind(server_address)
 
 #______________________________________________________________________________________________________
 #function for reading the sockets
-def sockRead(sequenceNumber, clientAddress):
+def sockRead(sequenceNumber, clientAddress, window):
     #Use dictionary as parameter? With each packet in window? For resend
     #define global variables
     global state
@@ -44,19 +46,33 @@ def sockRead(sequenceNumber, clientAddress):
     timeout = 1
 
     totalTimeout = 0
-    
+    d1 = datetime.datetime.strptime(str(datetime.datetime.now().time()), "%H:%M:%S.%f")
+    startTime = datetime.timedelta(minutes=d1.minute, seconds=d1.second, microseconds=d1.microsecond)
+    timeoutTime = startTime + datetime.timedelta(seconds=3)
     #check sockets of server
     while(1):
 
         readReady, writeReady, errorReady = select.select(readSock, writeSock, errorSock, timeout)
         # if nothing is present in the sockets print a timeout error
         if not readReady and not writeReady and not errorReady:
-            print "timeout: No communication from the client"
-            totalTimeout+=1
+            #print "timeout: No communication from the client"
+            d2 = datetime.datetime.strptime(str(datetime.datetime.now().time()), "%H:%M:%S.%f")
+            currentTime = datetime.timedelta(minutes=d2.minute, seconds=d2.second, microseconds=d2.microsecond)
+            if currentTime < timeoutTime:
+                print "waiting for cumulative ACK..."
+            else:
+                # Resend window
+                totalTimeout+=1
+                d3 = datetime.datetime.strptime(str(datetime.datetime.now().time()), "%H:%M:%S.%f")
+                resetTime = datetime.timedelta(minutes=d3.minute, seconds=d3.second, microseconds=d3.microsecond)
+                timeoutTime = resetTime + datetime.timedelta(seconds=3)
+                for packet in window:
+                    print "resending window..."
+                    sock.sendto(window[packet], clientAddress)
             if totalTimeout == 5:
                 state=0 #reset state variable
                 print "connection to client lost"
-                message = ""
+                message = "CONNECTION LOST"
                 return message, clientAddress
         else:
             #something present in the sockets - read it and return it
@@ -177,7 +193,8 @@ def sendAck(index,fileName, clientAddress):
 while True:
     print >>sys.stderr, '\nwaiting to receive message'
     #data, address = sock.recvfrom(4096)
-    data, address = sockRead("", server_address)
+    emptyDictionary = {}
+    data, address = sockRead("", server_address, emptyDictionary)
     
     print >>sys.stderr, 'received %s bytes from %s' % (len(data), address)
     print >>sys.stderr, data
@@ -254,16 +271,31 @@ while True:
                         sock.sendto(binaryData, address)
                         beginWindow = beginWindow + 1
                         #Save the last ack (sequence number) in the global variable
-                        #last_ACKed = sequenceNumber
-                    else:
-                        #Sock read with this sequence, and if ack received, continue on with next batch
-                        clientMessage = sockRead(sequenceNumber - 1, address)
-                        #Reset window
-                        beginWindow = 1
-                        # Reset window dictionary
-                        windowDictionary = {}
-                        #Save the last ack (sequence number) in the global variable
                         last_ACKed = sequenceNumber
+                        if beginWindow > windowSize:
+                            #Sock read with this sequence, and if ack received, continue on with next batch
+                            clientMessage = sockRead(sequenceNumber - 1, address, windowDictionary)
+                            if "CONNECTION LOST" in clientMessage:
+                                break
+                            else:
+                                #Reset window
+                                beginWindow = 1
+                                # Reset window dictionary
+                                windowDictionary = {}
+                                #Save the last ack (sequence number) in the global variable
+                                last_ACKed = sequenceNumber
+                    else:
+                        #Add message to dictionary
+                        #windowDictionary[sequenceNumber] = binaryData
+                        #Sock read with this sequence, and if ack received, continue on with next batch
+                        #clientMessage = sockRead(sequenceNumber - 1, address, windowDictionary)
+                        #Reset window
+                        #beginWindow = 1
+                        # Reset window dictionary
+                        #windowDictionary = {}
+                        #Save the last ack (sequence number) in the global variable
+                        #last_ACKed = sequenceNumber
+                        print "unknown packet"
                 #Send EOF
                 sentEOF = sock.sendto(emptyhdr.Write() + "", address)    
             elif recvHDR["datatype"] == "PUT":
